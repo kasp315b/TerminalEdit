@@ -15,7 +15,7 @@ namespace TerminalEdit
         }
 
         public static readonly int WINDOW_WIDTH  = Console.WindowWidth-1;
-        public static readonly int WINDOW_HEIGHT = Console.WindowHeight-1;
+        public static readonly int WINDOW_HEIGHT = Console.WindowHeight-2;
 
         private bool running;
         private int cursorX;
@@ -125,12 +125,18 @@ namespace TerminalEdit
                 builder.Append("\r\n");
             }
 
+            string titleText = "Terminal Text Editor";
             Console.SetCursorPosition(0, 0);
+            Console.BackgroundColor = ConsoleColor.Blue;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write(titleText + new string(' ', WINDOW_HEIGHT - titleText.Length));
+
+            Console.SetCursorPosition(0, 1);
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write(builder.ToString());
 
-            Console.SetCursorPosition(cursorX, cursorY);
+            Console.SetCursorPosition(cursorX, cursorY+1);
             Console.BackgroundColor = ConsoleColor.White;
             Console.ForegroundColor = ConsoleColor.Black;
             Console.Write(GetCharAt(cursorX, cursorY));
