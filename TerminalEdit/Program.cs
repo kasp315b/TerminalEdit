@@ -14,9 +14,14 @@ namespace TerminalEdit
             new Program();
         }
 
-        public static readonly int WINDOW_WIDTH  = Console.WindowWidth-1;
-        public static readonly int WINDOW_HEIGHT = Console.WindowHeight-2;
+        private static readonly DateTime Jan1St1970 = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        public static long Millis { get { return (long)((DateTime.UtcNow - Jan1St1970).TotalMilliseconds); } }
 
+        public static readonly char[] FORBIDDEN_CHARS = new char[] {'\r', '\n', '\t'};
+        public static readonly int WINDOW_WIDTH  = Console.WindowWidth;
+        public static readonly int WINDOW_HEIGHT = Console.WindowHeight-1;
+
+        private long lastRefresh;
         private bool running;
         private int cursorX;
         private int cursorY;
@@ -24,11 +29,13 @@ namespace TerminalEdit
 
         public Program()
         {
+            lastRefresh = 0;
             running = true;
             cursorX = 0;
             cursorY = 0;
             buffer = new char[WINDOW_HEIGHT * WINDOW_WIDTH];
             for (int i = 0; i < buffer.Length; i++) buffer[i] = ' ';
+            Console.CursorVisible = false;
             Run();
         }
 
@@ -69,7 +76,7 @@ namespace TerminalEdit
                                 cursorY--;
                                 if(cursorY < 0)
                                 {
-                                    cursorY = WINDOW_HEIGHT;
+                                    cursorY = 0;
                                 }
                                 for(cursorX = WINDOW_WIDTH; GetCharAt(cursorX, cursorY) == ' ' && cursorX > 0; cursorX--);
                                 if(cursorX != 0) goto case ConsoleKey.RightArrow;
@@ -84,15 +91,20 @@ namespace TerminalEdit
                             {
                                 cursorY++;
                                 cursorX = 0;
-                                if(cursorY > WINDOW_HEIGHT)
+                                if(cursorY >= WINDOW_HEIGHT)
                                 {
-                                    cursorY = 0;
+                                    cursorY = WINDOW_HEIGHT;
                                 }
                             }
                             break;
                     }
 
                     Redraw();
+                }
+                if(lastRefresh + 1000 < Millis)
+                {
+                    Redraw();
+                    lastRefresh = Millis;
                 }
                 Thread.Sleep(10);
             }
@@ -122,26 +134,25 @@ namespace TerminalEdit
                 {
                     builder.Append(GetCharAt(x, y));
                 }
-                builder.Append("\r\n");
             }
 
-            string titleText = "Terminal Text Editor";
+            string titleText = "# Terminal Text Editor v0.01";
             Console.SetCursorPosition(0, 0);
             Console.BackgroundColor = ConsoleColor.Blue;
             Console.ForegroundColor = ConsoleColor.White;
-            Console.Write(titleText + new string(' ', WINDOW_HEIGHT - titleText.Length));
+            Console.Write(titleText + new string(' ', WINDOW_WIDTH - titleText.Length));
 
             Console.SetCursorPosition(0, 1);
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write(builder.ToString());
 
-            Console.SetCursorPosition(cursorX, cursorY+1);
+            Console.SetCursorPosition(cursorX%WINDOW_WIDTH, (cursorY%WINDOW_HEIGHT)+1);
             Console.BackgroundColor = ConsoleColor.White;
             Console.ForegroundColor = ConsoleColor.Black;
             Console.Write(GetCharAt(cursorX, cursorY));
 
-            Console.SetCursorPosition(WINDOW_WIDTH, WINDOW_HEIGHT);
+            Console.SetCursorPosition(0, 0);
         }
     }
 }
